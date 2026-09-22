@@ -1,0 +1,16 @@
+- id: 'daily_status_check'
+  alias: "Daily 8am Status Check"
+  trigger:
+    - platform: time
+      at: "08:00:00"
+  action:
+    - service: notify.pixel_9a
+      data:
+        title: "Homelab Status - {{ now().strftime('%-m/%-d') }}"
+        message: >-
+          Garage: {{ states('sensor.garage_door_status') }}
+          Shop: {{ states('sensor.shop_door_status') }}
+          Docker (hp260g3): {{ states('sensor.homelab_docker_status') }}
+          DELLWS: {{ states('sensor.dellws_process_status') }}
+          AC Power: {{ states('sensor.ac_power_status') }}
+  mode: single

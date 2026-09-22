@@ -1,0 +1,31 @@
+# Secrets - never commit
+secrets.yaml
+
+# Home Assistant internal state/auth (contains tokens)
+.storage/
+.cloud/
+
+# Recorder database
+home-assistant_v2.db
+home-assistant_v2.db-shm
+home-assistant_v2.db-wal
+*.db
+
+# Logs
+home-assistant.log*
+*.log
+
+# Generated/cache
+deps/
+tts/
+image/
+.cache/
+__pycache__/
+*.pyc
+
+# Runtime lock/state files
+.ha_run.lock
+.HA_VERSION
+
+# OS cruft
+.DS_Store

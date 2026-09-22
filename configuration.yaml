@@ -1,0 +1,153 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+rest:
+  - resource: "https://weather.smart-app.live/vantage/current"
+    scan_interval: 300
+    sensor:
+      - name: "Outdoor Temperature"
+        unique_id: weather_outdoor_temperature
+        value_template: "{{ value_json.temperature }}"
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+      - name: "Outdoor Humidity"
+        unique_id: weather_outdoor_humidity
+        value_template: "{{ value_json.humidity }}"
+        unit_of_measurement: "%"
+        device_class: humidity
+        state_class: measurement
+      - name: "Wind Speed"
+        unique_id: weather_wind_speed
+        value_template: "{{ value_json.windSpeed }}"
+        unit_of_measurement: "mph"
+        state_class: measurement
+      - name: "Wind Direction"
+        unique_id: weather_wind_direction
+        value_template: "{{ value_json.windDirection }}"
+      - name: "Barometer"
+        unique_id: weather_barometer
+        value_template: "{{ value_json.barometer }}"
+        unit_of_measurement: "inHg"
+        device_class: pressure
+        state_class: measurement
+      - name: "Rain Today"
+        unique_id: weather_rain_today
+        value_template: "{{ value_json.dayRain }}"
+        unit_of_measurement: "in"
+        state_class: total_increasing
+      - name: "Dew Point"
+        unique_id: weather_dew_point
+        value_template: "{{ value_json.dewpoint }}"
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+      - name: "Feels Like"
+        unique_id: weather_feels_like
+        value_template: "{{ value_json.heatIndex if value_json.heatIndex else value_json.windChill }}"
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+      - name: "Indoor Temperature"
+        unique_id: weather_indoor_temperature
+        value_template: "{{ value_json.inTemperature }}"
+        unit_of_measurement: "°F"
+        device_class: temperature
+        state_class: measurement
+      - name: "Indoor Humidity"
+        unique_id: weather_indoor_humidity
+        value_template: "{{ value_json.inHumidity }}"
+        unit_of_measurement: "%"
+        device_class: humidity
+        state_class: measurement
+      - name: "Sunrise"
+        unique_id: weather_sunrise
+        value_template: "{{ value_json.sunrise }}"
+      - name: "Sunset"
+        unique_id: weather_sunset
+        value_template: "{{ value_json.sunset }}"
+  - resource: "https://garage.smart-app.live/gdoor/status"
+    headers:
+      Authorization: !secret garage_api_bearer
+    scan_interval: 30
+    sensor:
+      - name: "Garage Door Status"
+        unique_id: garage_gdoor_status
+        value_template: "{{ value }}"
+  - resource: "https://garage.smart-app.live/shop/status"
+    headers:
+      Authorization: !secret garage_api_bearer
+    scan_interval: 30
+    sensor:
+      - name: "Shop Door Status"
+        unique_id: garage_shop_status
+        value_template: "{{ value }}"
+  - resource: "http://127.0.0.1:9091/status"
+    scan_interval: 300
+    sensor:
+      - name: "Homelab Docker Status"
+        unique_id: homelab_docker_status
+        value_template: >-
+          {% set down = value_json.containers | selectattr('state', 'ne', 'running') | map(attribute='name') | list %}
+          {{ 'OK' if down | length == 0 else 'DOWN: ' + (down | join(', ')) }}
+  - resource: "https://weather.smart-app.live/vantage/SystemStatus"
+    scan_interval: 300
+    sensor:
+      - name: "DELLWS Process Status"
+        unique_id: dellws_process_status
+        value_template: >-
+          {% set down = value_json.processes | selectattr('running', 'eq', false) | map(attribute='name') | list %}
+          {{ 'OK' if down | length == 0 else 'DOWN: ' + (down | join(', ')) }}
+  - resource: "http://192.168.0.83:8732/"
+    scan_interval: 300
+    sensor:
+      - name: "AC Power Status"
+        unique_id: ac_power_status
+        value_template: "{{ 'ON' if value_json.acPower else 'OUT' }}"
+
+rest_command:
+  gdoor_open:
+    url: "https://garage.smart-app.live/gdoor/open"
+    method: GET
+    headers:
+      Authorization: !secret garage_api_bearer
+  gdoor_close:
+    url: "https://garage.smart-app.live/gdoor/close"
+    method: GET
+    headers:
+      Authorization: !secret garage_api_bearer
+  shop_open:
+    url: "https://garage.smart-app.live/shop/open"
+    method: GET
+    headers:
+      Authorization: !secret garage_api_bearer
+  shop_close:
+    url: "https://garage.smart-app.live/shop/close"
+    method: GET
+    headers:
+      Authorization: !secret garage_api_bearer
+
+template:
+  - cover:
+      - name: "Garage Door"
+        device_class: garage
+        state: "{{ states('sensor.garage_door_status') }}"
+        open_cover:
+          action: rest_command.gdoor_open
+        close_cover:
+          action: rest_command.gdoor_close
+      - name: "Shop Door"
+        device_class: garage
+        state: "{{ states('sensor.shop_door_status') }}"
+        open_cover:
+          action: rest_command.shop_open
+        close_cover:
+          action: rest_command.shop_close
