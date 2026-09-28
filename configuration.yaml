@@ -32,7 +32,10 @@ rest:
         state_class: measurement
       - name: "Wind Direction"
         unique_id: weather_wind_direction
-        value_template: "{{ value_json.windDirection }}"
+        value_template: "{{ value_json.windDir }}"
+        unit_of_measurement: "°"
+        device_class: wind_direction
+        state_class: measurement_angle
       - name: "Barometer"
         unique_id: weather_barometer
         value_template: "{{ value_json.barometer }}"
