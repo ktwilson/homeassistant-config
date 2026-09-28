@@ -4,7 +4,9 @@
     - platform: time
       at: "08:00:00"
   action:
-    - service: notify.pixel_9a
+    - action: notify.send_message
+      target:
+        entity_id: notify.pixel_9a
       data:
         title: "Homelab Status - {{ now().strftime('%-m/%-d') }}"
         message: >-
