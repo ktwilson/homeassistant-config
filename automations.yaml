@@ -76,7 +76,7 @@
           {{ states('input_datetime.kevin_pc_last_activity') }}.
     - action: notify.send_message
       target:
-        entity_id: notify.sms_via_email
+        entity_id: notify.sms_via_email_3306977793_msg_fi_google_com
       data:
         title: "Wellness Check"
         message: >-

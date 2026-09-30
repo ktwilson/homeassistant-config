@@ -19,20 +19,6 @@ input_boolean:
   pc_inactivity_alerted:
     name: PC Inactivity Already Alerted
 
-notify:
-  - name: sms_via_email
-    platform: smtp
-    server: mobile.charter.net
-    port: 25
-    timeout: 15
-    encryption: none
-    sender: !secret sms_email_account
-    username: !secret sms_email_account
-    password: !secret sms_email_password
-    recipient:
-      - !secret sms_email_recipient
-    sender_name: "Wellness Check"
-
 rest:
   - resource: "https://weather.smart-app.live/vantage/current"
     scan_interval: 300
