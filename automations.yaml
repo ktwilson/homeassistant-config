@@ -52,6 +52,9 @@
     no errors logged), so this more explicit pattern replaces it. Only
     alerts once per inactivity episode via pc_inactivity_alerted, which
     pc_activity_heartbeat resets whenever fresh activity arrives.
+    Notifies both Kevin's own phone (push, for visibility) and a real
+    SMS via email-to-SMS gateway to whoever should actually check on
+    him, since that person won't have Home Assistant installed.
   trigger:
     - platform: time_pattern
       minutes: "/15"
@@ -71,6 +74,14 @@
         message: >-
           Kevin's PC has shown no keyboard/mouse activity since
           {{ states('input_datetime.kevin_pc_last_activity') }}.
+    - action: notify.send_message
+      target:
+        entity_id: notify.sms_via_email
+      data:
+        title: "Wellness Check"
+        message: >-
+          Kevin's PC has shown no activity since
+          {{ states('input_datetime.kevin_pc_last_activity') }}. Please check on him.
     - action: input_boolean.turn_on
       target:
         entity_id: input_boolean.pc_inactivity_alerted
