@@ -16,3 +16,46 @@
           DELLWS: {{ states('sensor.dellws_process_status') }}
           AC Power: {{ states('sensor.ac_power_status') }}
   mode: single
+
+- id: 'pc_activity_heartbeat'
+  alias: "PC Activity Heartbeat Received"
+  description: >-
+    Receives a webhook POST from UserMonitor (runs on Kevin's PC, hooks
+    keyboard/mouse activity) every time it logs activity, and records the
+    timestamp. Paired with pc_inactivity_alert for the actual wellness check.
+  trigger:
+    - platform: webhook
+      webhook_id: !secret webhook_usermonitor_activity
+      allowed_methods:
+        - POST
+      local_only: true
+  action:
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.kevin_pc_last_activity
+      data:
+        timestamp: "{{ now().timestamp() }}"
+  mode: single
+
+- id: 'pc_inactivity_alert'
+  alias: "PC Inactivity Alert"
+  description: >-
+    Fires if kevin_pc_last_activity hasn't been updated (i.e. no keyboard/
+    mouse activity logged by UserMonitor) for 8 hours straight - the
+    wellness check. Paired with pc_activity_heartbeat which updates the
+    timestamp.
+  trigger:
+    - platform: state
+      entity_id: input_datetime.kevin_pc_last_activity
+      for:
+        hours: 8
+  action:
+    - action: notify.send_message
+      target:
+        entity_id: notify.pixel_9a
+      data:
+        title: "No PC activity in 8 hours"
+        message: >-
+          Kevin's PC has shown no keyboard/mouse activity since
+          {{ states('input_datetime.kevin_pc_last_activity') }}.
+  mode: single

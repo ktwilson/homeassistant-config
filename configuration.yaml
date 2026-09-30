@@ -9,6 +9,12 @@ automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 
+input_datetime:
+  kevin_pc_last_activity:
+    name: Kevin PC Last Activity
+    has_date: true
+    has_time: true
+
 rest:
   - resource: "https://weather.smart-app.live/vantage/current"
     scan_interval: 300
