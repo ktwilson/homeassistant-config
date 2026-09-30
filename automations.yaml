@@ -35,20 +35,33 @@
         entity_id: input_datetime.kevin_pc_last_activity
       data:
         timestamp: "{{ now().timestamp() }}"
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.pc_inactivity_alerted
   mode: single
 
 - id: 'pc_inactivity_alert'
   alias: "PC Inactivity Alert"
   description: >-
-    Fires if kevin_pc_last_activity hasn't been updated (i.e. no keyboard/
-    mouse activity logged by UserMonitor) for 8 hours straight - the
-    wellness check. Paired with pc_activity_heartbeat which updates the
-    timestamp.
+    Checks every 15 minutes whether kevin_pc_last_activity has gone 8+
+    hours without an update (i.e. UserMonitor hasn't logged any
+    keyboard/mouse activity) - the wellness check. Uses a periodic check
+    plus an elapsed-time condition rather than a state "for:" trigger -
+    testing showed a state+for trigger on this entity didn't reliably
+    fire (last_triggered stayed None well past the test threshold, with
+    no errors logged), so this more explicit pattern replaces it. Only
+    alerts once per inactivity episode via pc_inactivity_alerted, which
+    pc_activity_heartbeat resets whenever fresh activity arrives.
   trigger:
-    - platform: state
-      entity_id: input_datetime.kevin_pc_last_activity
-      for:
-        hours: 8
+    - platform: time_pattern
+      minutes: "/15"
+  condition:
+    - condition: template
+      value_template: >-
+        {{ (as_timestamp(now()) - as_timestamp(states.input_datetime.kevin_pc_last_activity.last_changed)) >= 8 * 3600 }}
+    - condition: state
+      entity_id: input_boolean.pc_inactivity_alerted
+      state: "off"
   action:
     - action: notify.send_message
       target:
@@ -58,4 +71,7 @@
         message: >-
           Kevin's PC has shown no keyboard/mouse activity since
           {{ states('input_datetime.kevin_pc_last_activity') }}.
+    - action: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.pc_inactivity_alerted
   mode: single

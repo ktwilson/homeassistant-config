@@ -15,6 +15,10 @@ input_datetime:
     has_date: true
     has_time: true
 
+input_boolean:
+  pc_inactivity_alerted:
+    name: PC Inactivity Already Alerted
+
 rest:
   - resource: "https://weather.smart-app.live/vantage/current"
     scan_interval: 300
