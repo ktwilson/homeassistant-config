@@ -125,6 +125,22 @@ rest:
       - name: "AC Power Status"
         unique_id: ac_power_status
         value_template: "{{ 'ON' if value_json.acPower else 'OUT' }}"
+  - resource: "https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/194/schedule"
+    scan_interval: 3600
+    sensor:
+      # Next Ohio State game not yet completed. Kickoff stays unknown while
+      # ESPN marks the time as TBA (timeValid false), so nothing fires early.
+      - name: "Ohio State Next Kickoff"
+        unique_id: osu_football_next_kickoff
+        device_class: timestamp
+        value_template: >-
+          {% set ev = value_json.events | rejectattr('competitions.0.status.type.completed') | first %}
+          {{ (ev.date | as_datetime).isoformat() if ev and ev.competitions[0].timeValid else None }}
+      - name: "Ohio State Next Game"
+        unique_id: osu_football_next_game
+        value_template: >-
+          {% set ev = value_json.events | rejectattr('competitions.0.status.type.completed') | first %}
+          {{ (ev.name ~ ('' if ev.competitions[0].timeValid else ' (time TBA)')) if ev else 'None scheduled' }}
 
 rest_command:
   gdoor_open:
