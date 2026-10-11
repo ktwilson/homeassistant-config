@@ -70,7 +70,8 @@
     Turns the living room TV on 15 minutes before each Ohio State football
     kickoff (sensor.ohio_state_next_kickoff, from the ESPN schedule API)
     and opens YouTube TV. Uses the Chromecast with Google TV via Android
-    TV Remote; powering it on wakes the Hisense over HDMI-CEC.
+    TV Remote; powering it on wakes the Hisense over HDMI-CEC. YouTube TV
+    is launched over ADB.
   trigger:
     - platform: time
       at:
@@ -81,10 +82,13 @@
       target:
         entity_id: media_player.living_room_tv2_2
     - delay: "00:00:10"
-    - action: media_player.play_media
+    - action: androidtv.adb_command
       target:
-        entity_id: media_player.living_room_tv2_2
+        entity_id: media_player.android_tv_192_168_0_47
       data:
-        media_content_type: app
-        media_content_id: com.google.android.youtube.tvunplugged
+        # YouTube TV ignores Android TV Remote app launches, so start it
+        # over ADB (Android Debug Bridge integration) instead.
+        command: >-
+          monkey -p com.google.android.youtube.tvunplugged
+          -c android.intent.category.LEANBACK_LAUNCHER 1
   mode: single
